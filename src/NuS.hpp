@@ -163,6 +163,7 @@ public:
   {
     if (pOtherServerCallbacks)
       pOtherServerCallbacks->onPassKeyRequest();
+    return 0;
   };
 
   virtual void onAuthenticationComplete(ble_gap_conn_desc *desc) override
@@ -175,8 +176,10 @@ public:
   {
     if (pOtherServerCallbacks)
       pOtherServerCallbacks->onConfirmPIN(pin);
+    return true;
   };
 
+  uint16_t getMTU() const;
 protected:
   NordicUARTService();
   virtual ~NordicUARTService();
@@ -190,6 +193,7 @@ private:
   StaticSemaphore_t peerConnectedBuffer;
   bool autoAdvertising = true;
   bool started = false;
+  bool connected = false;
 
   /**
    * @brief Create the NuS service in a new GATT server
