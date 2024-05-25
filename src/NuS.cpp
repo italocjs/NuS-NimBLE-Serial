@@ -115,6 +115,7 @@ void NordicUARTService::onConnect(NimBLEServer *pServer)
   if (pOtherServerCallbacks)
     pOtherServerCallbacks->onConnect(pServer);
   // Note: onConnect(*pServer, *desc) gets called after this one
+  connected = true;
 }
 
 void NordicUARTService::onConnect(NimBLEServer *pServer, ble_gap_conn_desc *desc)
@@ -122,6 +123,7 @@ void NordicUARTService::onConnect(NimBLEServer *pServer, ble_gap_conn_desc *desc
   if (pOtherServerCallbacks)
     pOtherServerCallbacks->onConnect(pServer, desc);
   xSemaphoreGive(peerConnected);
+  connected = true;
 }
 
 void NordicUARTService::onDisconnect(NimBLEServer *pServer, ble_gap_conn_desc *desc)
@@ -130,6 +132,7 @@ void NordicUARTService::onDisconnect(NimBLEServer *pServer, ble_gap_conn_desc *d
     pOtherServerCallbacks->onDisconnect(pServer, desc);
   if (autoAdvertising)
     pServer->startAdvertising();
+  connected = false;
 }
 
 void NordicUARTService::onDisconnect(NimBLEServer *pServer)
@@ -137,6 +140,7 @@ void NordicUARTService::onDisconnect(NimBLEServer *pServer)
   if (pOtherServerCallbacks)
     pOtherServerCallbacks->onDisconnect(pServer);
   // Note: onDisconnect(*pServer, *desc) gets called after this one
+  connected = false;
 }
 
 void NordicUARTService::setCallbacks(NimBLEServerCallbacks *pServerCallbacks)
@@ -190,4 +194,16 @@ size_t NordicUARTService::printf(const char *format, ...)
     }
   }
   return 0;
+}
+
+uint16_t NordicUARTService::getMTU() const {
+    if (connected && pServer) {
+        // Assuming there's only one connected peer, or you have a way to identify the correct peer
+        std::vector<uint16_t> peerIds = pServer->getPeerDevices();
+        if (!peerIds.empty()) {
+            // Get the MTU for the first connected peer
+            return pServer->getPeerMTU(peerIds.front());
+        }
+    }
+    return 0; // Return 0 or default MTU if not connected
 }
